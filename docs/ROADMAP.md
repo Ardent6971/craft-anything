@@ -1,5 +1,14 @@
 # Roadmap
 
+## Fork setup work
+
+This fork also tracks its owner-requested Windows setup separately from the upstream product roadmap.
+This lane prepares local use and does not claim upstream features are complete.
+
+- [ ] F0: Audit the fork and prepare Claude instructions, a Windows start guide, local-AI boundaries,
+  and website, video, Minecraft and game workflows — claimed: Codex, branch `docs/claude-windows-setup`.
+
+
 The shared plan for reaching the product described in the README, for people and agents alike.
 `docs/STATUS.md` says what works today; this file says what comes next, who owns it and what an
 agent may pick up. Drafted 2026-10-18 from a survey of `main` at `1d47a3e` (624 tests passing);
