@@ -1,3 +1,7 @@
+> **This fork:** [Windows quick start](docs/fork/WINDOWS-START.md) ·
+> [Claude setup task](docs/fork/CLAUDE-SETUP.md) · [Capabilities and gaps](docs/fork/AUDIT.md).
+> Setup guidance is prepared; installation and runtime checks are still pending.
+
 <p align="center">
   <a href="https://getartcraft.com/">
     <picture>

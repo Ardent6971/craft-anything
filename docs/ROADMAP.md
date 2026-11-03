@@ -5,9 +5,17 @@
 This fork also tracks its owner-requested Windows setup separately from the upstream product roadmap.
 This lane prepares local use and does not claim upstream features are complete.
 
-- [ ] F0: Audit the fork and prepare Claude instructions, a Windows start guide, local-AI boundaries,
-  and website, video, Minecraft and game workflows — claimed: Codex, branch `docs/claude-windows-setup`.
-
+- [x] F0: Audit the fork and prepare Claude instructions, a Windows start guide, local-AI boundaries,
+  and website, video, Minecraft and game workflows — Codex, branch `docs/claude-windows-setup`.
+  See [the audit](fork/AUDIT.md), [fork brief](fork/BRIEF.md) and [Claude setup queue](fork/CLAUDE-SETUP.md).
+  Documentation is complete; no desktop installation or runtime verification is claimed.
+- [ ] F1: Review the current baseline, upstream changes and Windows dependencies (no prerequisite).
+- [ ] F2: Implement repeatable base setup, preflight and launch helpers (depends on F1).
+- [ ] F3: Verify the Windows app, Claude builder, MCP and a real first project (depends on F2).
+- [ ] F4: Prepare optional website, media, Minecraft and game tool packs (depends on F2;
+  native extension work also depends on F3).
+- [ ] F5: Test optional local inference and offline building (depends on F2; does not block Claude-first use).
+- [ ] F6: Deliver the short desktop checklist and evidence report (depends on F2; include remaining F3–F5 gaps).
 
 The shared plan for reaching the product described in the README, for people and agents alike.
 `docs/STATUS.md` says what works today; this file says what comes next, who owns it and what an
