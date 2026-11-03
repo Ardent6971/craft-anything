@@ -17,6 +17,6 @@ compatible servers); client mods (Fabric, NeoForge) and Bedrock are different pr
    look for `HelloPlugin enabled` in the log, join on `localhost`, run `/hello`.
 
 Verified so far: `gradle build` with Paper API 1.21.11-R0.1-SNAPSHOT on JDK 21 produced the JAR
-(Java 21 class files, `plugin.yml` filled in). Not yet loaded on a server, and not built on
-Windows. `gradle-wrapper.jar` is Gradle 8.14.3's own (SHA-256
+(Java 21 class files, `plugin.yml` filled in), on Linux and with `gradlew.bat` on a Windows CI
+runner. Not yet loaded on a server. `gradle-wrapper.jar` is Gradle 8.14.3's own (SHA-256
 7d3a4ac4de1c32b59bc6a4eb8ecb8e612ccd0cf1ae1e99f66902da64df296172, as Gradle publishes it).

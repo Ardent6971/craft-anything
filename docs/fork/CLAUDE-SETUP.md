@@ -58,8 +58,9 @@ for real on Linux with disposable folders; the PowerShell itself awaits a Window
 - [x] Leave system-wide security settings alone. Do not add global execution-policy bypasses,
   blanket agent permission bypasses, or installers for every optional engine.
 - [x] Do not auto-register in all detected clients; target the chosen Claude Code client.
-- [ ] Do not claim scripts work on Windows until tested there: run `.github/workflows/fork-windows-setup.yml`
-  (or the checklist in `REPORT.md`) on Windows and record the result.
+- [x] Do not claim scripts work on Windows until tested there: `.github/workflows/fork-windows-setup.yml`
+  passed on `windows-latest` with Windows PowerShell 5.1 (run 41679014244, see `REPORT.md`).
+- [ ] Run the checklist once on the owner's own Windows 10/11 desktop (real profile, signed in).
 
 ### F3 — end-to-end base proof (depends on F2)
 

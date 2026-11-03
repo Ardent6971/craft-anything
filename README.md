@@ -1,7 +1,7 @@
 > **This fork:** [Windows quick start](docs/fork/WINDOWS-START.md) (scripts in `fork/windows`) ·
 > [Workflows](docs/fork/WORKFLOWS.md) · [Verification report](docs/fork/REPORT.md) ·
 > [Capabilities and gaps](docs/fork/AUDIT.md). Verified on Linux with the fork build and Claude
-> Code; the Windows scripts have not yet run on Windows.
+> Code, and the setup scripts pass on a Windows CI runner; not yet run on the owner's desktop.
 
 <p align="center">
   <a href="https://getartcraft.com/">

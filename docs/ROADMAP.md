@@ -11,7 +11,7 @@ This lane prepares local use and does not claim upstream features are complete.
   Documentation is complete; no desktop installation or runtime verification is claimed.
 - [x] F1: Review the current baseline, upstream changes and Windows dependencies (no prerequisite) — Claude, branch `claude/craftanything-windows-setup-gehpkc`.
 - [ ] F2: Implement repeatable base setup, preflight and launch helpers (depends on F1) — claimed: Claude, branch `claude/craftanything-windows-setup-gehpkc`.
-  Implemented in `fork/windows/`; open until the scripts have run on Windows.
+  Implemented in `fork/windows/`; passes on a Windows CI runner (PowerShell 5.1); open until run on the owner's desktop.
 - [ ] F3: Verify the Windows app, Claude builder, MCP and a real first project (depends on F2).
   Linux half done (fork build, Claude Code 2.1.317, live website build); Windows rows pending in `fork/REPORT.md`.
 - [ ] F4: Prepare optional website, media, Minecraft and game tool packs (depends on F2;

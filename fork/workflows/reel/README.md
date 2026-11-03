@@ -21,6 +21,6 @@ CAPTIONS=input/captions.srt MUSIC=input/music.m4a ./render.sh output/reel.mp4 in
 - `check.sh` checks properties only. Watch the whole result before using it.
 - Originals in `input/` are only read. The render refuses to overwrite one of its inputs.
 
-Verified on Linux with FFmpeg 6.1.1 on synthetic clips (see docs/fork/REPORT.md). Not yet run in
-Git Bash on Windows. Coded motion graphics (Remotion, Blender) are possible next steps, added only
+Verified on synthetic clips on Linux (FFmpeg 6.1.1) and in Git Bash on a Windows CI runner
+(FFmpeg from Chocolatey); see docs/fork/REPORT.md. Not yet run on your own recordings. Coded motion graphics (Remotion, Blender) are possible next steps, added only
 when a project needs them.

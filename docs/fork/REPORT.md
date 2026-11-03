@@ -34,7 +34,8 @@ pointed at temp folders **with spaces in their names**. No real config was read 
 
 ## Windows run (GitHub Actions `windows-latest`, Windows PowerShell 5.1)
 
-Workflow `fork-windows-setup.yml`, run 41678610946 on commit `5694445`. Install root, Claude
+Workflow `fork-windows-setup.yml`: run 41678610946 on `5694445` (failed only on its own restore
+assertion), then run **41679014244 on `2ae313d`: every step passed** (2 min 12 s). Install root, Claude
 Code config and Craft Anything settings were disposable folders with spaces in their names.
 Claude Code 2.1.317 from npm, **not signed in**.
 
@@ -47,7 +48,11 @@ Claude Code 2.1.317 from npm, **not signed in**.
 | `claude mcp list` (Claude Code itself) | `craft-anything: …\craft-anything-cli.exe mcp - √ Connected` |
 | `setup.cmd -Yes` again | "Already installed and verified", "Claude Code is already connected", builder kept: nothing changed |
 | `start.cmd` | **the 0.3.0 app was running 20 s later with a window titled "Craft Anything"** (`WGPU_BACKEND=dx12`) |
-| Restore | the script restored the chosen backup; the job's own assertion compared against the wrong file (Claude Code rewrites `.claude.json` on its first run) and failed. Assertion fixed in the next commit; see that run for restore, uninstall and the templates |
+| Restore, then uninstall | `restore-claude-config` (`-Yes`) put back the pre-setup file byte for byte: no craft-anything entry, `other-server` kept; `uninstall` ran. (The first run's assertion compared with the file the job wrote before Claude Code's first run, which Claude Code rewrites; fixed.) |
+| `new-project` ×3 | website, reel and minecraft-paper folders made under a path with a space; `CLAUDE.md` routing added once |
+| Paper template on Windows | `gradlew.bat build` with JDK 21: the wrapper downloaded Gradle 8.14.3 (checksum pinned) and built `hello-plugin-0.1.0.jar` |
+| Reel in Git Bash on Windows | FFmpeg from Chocolatey: `make-sample.sh` + `render.sh` with captions → 1080×1920, H.264/AAC 48 kHz, 30 fps, yuv420p; `check.sh` ok |
+| Other checks on `2ae313d` | upstream CI gate: passed; packaging lint: passed |
 
 ### Two findings from the live runs
 
@@ -70,11 +75,10 @@ Claude Code 2.1.317 from npm, **not signed in**.
 | Item | How to check | Where it is automated |
 |---|---|---|
 | The scripts on **your** PC (Windows 10/11 desktop, your real profile, signed in) | the checklist in `WINDOWS-START.md` | CI covered a Windows Server runner only (above) |
-| `restore-claude-config.cmd`, `uninstall`, `new-project.cmd` on Windows | the checklist | CI workflow (second run) |
 | Claude Code sign-in on the PC | `claude auth login`, `claude auth status` | owner only |
 | A live build on Windows (Claude Code's bash is Git Bash there) | step 5 of the checklist | owner only (needs sign-in) |
 | Source route on Windows (`-Route Source`, MSVC linker) | `setup.cmd -Route Source` | workflow, manual dispatch |
-| Reel scripts in Git Bash on Windows (path conversion, libass in the FFmpeg build) | `new-project.cmd -Kind reel`, then the README | workflow |
+| Reel with your own recordings and the FFmpeg you install (e.g. winget's Gyan build) | `new-project.cmd -Kind reel`, then the README | CI used Chocolatey's FFmpeg and synthetic clips |
 | Paper plugin on a real server, `/hello` in game | the template README, step 4 | owner only (server JAR, EULA) |
 | Fabric/NeoForge, resource/data packs | — | no template yet |
 | Godot game build | `--build-with godot` | owner (install Godot first) |
