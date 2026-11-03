@@ -197,5 +197,5 @@ function Get-CaAppVersion([string]$Dir) {
     if (-not (Test-Path -LiteralPath $cli)) { return $null }
     $r = Invoke-CaNative -File $cli -Arguments @('--version')
     if ($r.Code -ne 0) { return $null }
-    return (($r.Lines | Select-Object -First 1) -replace '^\s+|\s+$', '')
+    return (($r.Lines | Select-Object -First 1) -replace '^\s+|\s+$', '' -replace '^craft-anything-cli\s+', '')
 }

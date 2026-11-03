@@ -30,7 +30,24 @@ pointed at temp folders **with spaces in their names**. No real config was read 
 | Reel pack | `make-sample.sh`; `render.sh --preview`; `render.sh` with captions; with `MUSIC` | 540×960 preview and 1080×1920 30 fps H.264/AAC/yuv420p; captions visible in extracted frames; silent clip got silence; missing clip → exit 2 |
 | Paper plugin pack | `gradle build` on a copy of `fork/workflows/minecraft-paper` | `hello-plugin-0.1.0.jar` (Java 21 class files, filled-in `plugin.yml`), Paper API 1.21.11-R0.1-SNAPSHOT |
 | Gradle wrapper | `sha256sum gradle-wrapper.jar` vs Gradle's published value | match `7d3a4ac4…172`; distribution SHA-256 pinned in the properties |
-| PowerShell scripts | — | **not run** (no PowerShell here; installing one was declined). Checked: ASCII only, `.cmd` files CRLF |
+| PowerShell scripts (here) | — | not run in this container (no PowerShell). Checked: ASCII only, `.cmd` files CRLF |
+
+## Windows run (GitHub Actions `windows-latest`, Windows PowerShell 5.1)
+
+Workflow `fork-windows-setup.yml`, run 41678610946 on commit `5694445`. Install root, Claude
+Code config and Craft Anything settings were disposable folders with spaces in their names.
+Claude Code 2.1.317 from npm, **not signed in**.
+
+| Step | Result |
+|---|---|
+| Parse all `.ps1` with 5.1, ASCII check | passed |
+| `check.cmd -Quick` | ran; "Base requirements are met", next step `claude auth login` (correct: not signed in) |
+| `setup.cmd -Yes` | downloaded the x64 ZIP, **SHA-256 matched pinned value and SHA256SUMS.txt**, installed, `0.3.0` ran; dated backup; preview then `configured`; builder added and selected; doctor `healthy` (registration, skill, MCP self-test 29 tools) |
+| Config afterwards | `craft-anything` entry points at the installed CLI; unrelated `other-server` kept; `current.json` written |
+| `claude mcp list` (Claude Code itself) | `craft-anything: …\craft-anything-cli.exe mcp - √ Connected` |
+| `setup.cmd -Yes` again | "Already installed and verified", "Claude Code is already connected", builder kept: nothing changed |
+| `start.cmd` | **the 0.3.0 app was running 20 s later with a window titled "Craft Anything"** (`WGPU_BACKEND=dx12`) |
+| Restore | the script restored the chosen backup; the job's own assertion compared against the wrong file (Claude Code rewrites `.claude.json` on its first run) and failed. Assertion fixed in the next commit; see that run for restore, uninstall and the templates |
 
 ### Two findings from the live runs
 
@@ -52,8 +69,8 @@ pointed at temp folders **with spaces in their names**. No real config was read 
 
 | Item | How to check | Where it is automated |
 |---|---|---|
-| `check.cmd`, `setup.cmd`, `start.cmd`, `restore-claude-config.cmd`, `new-project.cmd` in Windows PowerShell 5.1 | the checklist in `WINDOWS-START.md` | `.github/workflows/fork-windows-setup.yml` (parse, setup twice, backup, `claude mcp list`, doctor, app start, restore, uninstall, templates) |
-| The 0.3.0 portable app opens a window with `WGPU_BACKEND=dx12` | `start.cmd` | same workflow (best-effort on a hosted runner) |
+| The scripts on **your** PC (Windows 10/11 desktop, your real profile, signed in) | the checklist in `WINDOWS-START.md` | CI covered a Windows Server runner only (above) |
+| `restore-claude-config.cmd`, `uninstall`, `new-project.cmd` on Windows | the checklist | CI workflow (second run) |
 | Claude Code sign-in on the PC | `claude auth login`, `claude auth status` | owner only |
 | A live build on Windows (Claude Code's bash is Git Bash there) | step 5 of the checklist | owner only (needs sign-in) |
 | Source route on Windows (`-Route Source`, MSVC linker) | `setup.cmd -Route Source` | workflow, manual dispatch |

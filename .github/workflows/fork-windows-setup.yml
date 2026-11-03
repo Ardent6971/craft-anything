@@ -56,7 +56,6 @@ jobs:
           New-Item -ItemType Directory -Force -Path $env:CLAUDE_CONFIG_DIR | Out-Null
           # An unrelated MCP entry that setup must keep.
           Set-Content -Path (Join-Path $env:CLAUDE_CONFIG_DIR '.claude.json') -Encoding ASCII -Value '{"mcpServers":{"other-server":{"command":"other.exe","args":["x"]}}}'
-          Copy-Item (Join-Path $env:CLAUDE_CONFIG_DIR '.claude.json') "$env:RUNNER_TEMP\claude-original.json"
 
       - name: check.cmd before setup (Claude Code is not signed in, so exit 1 is expected)
         shell: cmd
@@ -128,9 +127,14 @@ jobs:
           $first = Get-ChildItem (Join-Path $env:CRAFT_ANYTHING_FORK_ROOT 'backups') -Filter 'claude.json.*.bak' | Sort-Object Name | Select-Object -First 1
           powershell -NoProfile -ExecutionPolicy Bypass -File .\fork\windows\Restore-ClaudeConfig.ps1 -Backup $first.FullName -Yes
           if ($LASTEXITCODE) { throw 'restore failed' }
-          $now = Get-Content (Join-Path $env:CLAUDE_CONFIG_DIR '.claude.json') -Raw
-          $orig = Get-Content "$env:RUNNER_TEMP\claude-original.json" -Raw
-          if ($now -ne $orig) { throw 'restore did not bring back the original file' }
+          # Compare with the backup itself: Claude Code rewrites .claude.json on its first run (in
+          # check.cmd), so the file setup backed up is not the one this job wrote at the start.
+          $cfgPath = Join-Path $env:CLAUDE_CONFIG_DIR '.claude.json'
+          if ((Get-FileHash $cfgPath).Hash -ne (Get-FileHash $first.FullName).Hash) { throw 'restored file differs from the backup' }
+          $cfg = Get-Content $cfgPath -Raw | ConvertFrom-Json
+          if ($cfg.mcpServers.PSObject.Properties['craft-anything']) { throw 'the pre-setup backup still has a craft-anything entry' }
+          if (-not $cfg.mcpServers.'other-server') { throw 'other-server missing after restore' }
+          'restored the pre-setup config: no craft-anything entry, other-server kept'
           $cli = & .\fork\windows\Start-CraftAnything.ps1 -Cli
           & $cli --format text uninstall
 
