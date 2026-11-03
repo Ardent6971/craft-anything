@@ -18,6 +18,54 @@ The release, the fork baseline and upstream main are distinct code versions even
 their manifest version can be the same. Recheck before updating; do not merge 64 commits
 blindly or assume the prebuilt release includes the fork's later fixes.
 
+## F1 re-check and baseline choice (2026-11-03, setup PR)
+
+Re-read from git (not the GitHub API, which this environment can't reach for upstream):
+
+| Item | Observed value |
+|---|---|
+| Fork `main` | still `2e4afc5`; this PR adds only docs, `fork/` and one CI workflow on top |
+| Upstream `main` | `75bf5a3`, now **77** commits ahead of the fork; a test merge (`git merge-tree`) has no conflicts |
+| Release `v0.3.0` | tag `e6280b5`, an ancestor of the fork baseline; still the newest release (`v0.4.0` assets return 404; upstream `main` already says 0.4.0) |
+| `SHA256SUMS.txt` (v0.3.0) | downloaded; Windows x64 portable `cf60e403…6d8` (matches above), arm64 `8fecfcbd…9d7`, x86 `f3fad622…052` |
+| Windows x64 portable ZIP | downloaded and hashed here: matches. Contains `craft-anything.exe` and `craft-anything-cli.exe` side by side, `portable.txt`, licences. Not executed (no Windows here) |
+
+**What 0.3.0 lacks that the fork baseline has** (upstream's own R5.1 list): `0748ef1` (#414,
+Windows starts DX12 only: the "it won't open" crash on some Intel drivers), `1e8f661` (#471, a
+builder never continues another builder's session) and `3357daf` (#430, Claude Code's task on
+stdin; 0.3.0 puts it on the command line, which fails past Windows' 32,767-character limit).
+
+**What the fork baseline lacks that upstream `main` has**, relevant to this setup: `2920a7c`
+(#637, restrict Claude Code's tools and ask before unknown ones), `6d90c65` (#558, Windows' own
+shader compiler; how to start without the graphics card), `78e1f7d` (#583, "found but can't
+start" message), `aeb86a6` (#653, agent setup/streaming fixes), `549ae5e` (#490, one MCP schema).
+Upstream recorded #490 as not reproduced with 0.3.0 on Windows (314 of 315 tools mounted, the
+315th being the approval tool); here the fork build mounted **315 of 315** in Claude Code 2.1.317
+on Linux.
+
+**Recommendation.** First run: the pinned **0.3.0 portable** release (fast, checksummed),
+started with `WGPU_BACKEND=dx12` to cover #414. Ongoing use and any fork changes: the **fork
+source build** (`setup.cmd -Route Source`), which has #414/#471/#430. Sync upstream in a
+**separate PR** (it is conflict-free today, 179 files) and run the full checks there; it is not
+bundled with the setup scripts.
+
+## Windows prerequisites
+
+| Need | For | Source | Notes |
+|---|---|---|---|
+| Windows 10/11, x64 (arm64/x86 builds also pinned) | everything | — | `check.cmd` reports OS and architecture |
+| Windows PowerShell 5.1 | the scripts | built in | PowerShell 7 also works; scripts are ASCII for 5.1 |
+| Claude Code (`claude`) | building, MCP | <https://code.claude.com/docs/en/setup> | sign in with `claude auth login` |
+| Git for Windows | Claude Code's bash; cloning | <https://git-scm.com/downloads/win> or `winget install --id Git.Git -e` | |
+| Edge or Chrome | website checks/captures | usually present | |
+| Rust ≥ 1.97 + VS C++ build tools | source route only | <https://rustup.rs> | not lowered; the manifest's `rust-version` is read by the scripts |
+| FFmpeg | reel workflow only | e.g. `winget install Gyan.FFmpeg` | |
+| JDK matching the Minecraft version | Minecraft workflow only | e.g. Temurin 21 for 1.21.x | Paper's 26.x API needs Java 25 |
+| Godot (or Rust) | small games only | <https://godotengine.org> | name the engine; Unity is the default otherwise |
+
+Versions of Claude Code, Git, FFmpeg and JDKs are whatever is current when installed; the
+scripts check presence and (for Rust) the minimum, and print what they find.
+
 ## What the source supports
 
 | Area | Evidence in this fork | Setup consequence |
@@ -66,7 +114,8 @@ Claude integration docs, CLI setup/rebuild arguments, diagnostics, backend confi
 target-kind registration, stack recipes, Build tools and Windows packaging source.
 GitHub metadata verified the fork head, upstream comparison and release asset names/digest.
 
-This environment has no Rust compiler and no Windows desktop. No cargo checks, Windows launch,
+The first audit's environment had no Rust compiler and no Windows desktop (the setup PR's
+environment has Rust 1.97 on Linux: see [REPORT.md](REPORT.md)). No cargo checks, Windows launch,
 Claude authentication, MCP live handshake, local inference, rendered video, game or Minecraft
 client test was run. Upstream test claims are upstream reports, not tests repeated here.
 The referenced sibling `../craftrules/AGENTS.md` is absent from this checkout. Do not invent

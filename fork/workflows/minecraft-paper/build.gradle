@@ -1,0 +1,30 @@
+plugins {
+    id 'java'
+}
+
+group = 'example.hello'
+version = project.pluginVersion
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://repo.papermc.io/repository/maven-public/' }
+}
+
+dependencies {
+    compileOnly "io.papermc.paper:paper-api:${project.paperApi}"
+}
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(project.javaVersion as int) }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = project.javaVersion as int
+}
+
+processResources {
+    def props = [version: project.version, apiVersion: project.apiVersion]
+    inputs.properties props
+    filesMatching('plugin.yml') { expand props }
+}

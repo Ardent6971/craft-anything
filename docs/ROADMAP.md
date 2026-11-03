@@ -9,13 +9,17 @@ This lane prepares local use and does not claim upstream features are complete.
   and website, video, Minecraft and game workflows — Codex, branch `docs/claude-windows-setup`.
   See [the audit](fork/AUDIT.md), [fork brief](fork/BRIEF.md) and [Claude setup queue](fork/CLAUDE-SETUP.md).
   Documentation is complete; no desktop installation or runtime verification is claimed.
-- [ ] F1: Review the current baseline, upstream changes and Windows dependencies (no prerequisite).
-- [ ] F2: Implement repeatable base setup, preflight and launch helpers (depends on F1).
+- [x] F1: Review the current baseline, upstream changes and Windows dependencies (no prerequisite) — Claude, branch `claude/craftanything-windows-setup-gehpkc`.
+- [ ] F2: Implement repeatable base setup, preflight and launch helpers (depends on F1) — claimed: Claude, branch `claude/craftanything-windows-setup-gehpkc`.
+  Implemented in `fork/windows/`; passes on a Windows CI runner (PowerShell 5.1); open until run on the owner's desktop.
 - [ ] F3: Verify the Windows app, Claude builder, MCP and a real first project (depends on F2).
+  Linux half done (fork build, Claude Code 2.1.317, live website build); Windows rows pending in `fork/REPORT.md`.
 - [ ] F4: Prepare optional website, media, Minecraft and game tool packs (depends on F2;
-  native extension work also depends on F3).
+  native extension work also depends on F3) — claimed: Claude, branch `claude/craftanything-windows-setup-gehpkc`. Packs and templates in
+  `fork/workflows/`; open: Paper server test, Windows runs, the "page" → app classification follow-up.
 - [ ] F5: Test optional local inference and offline building (depends on F2; does not block Claude-first use).
-- [ ] F6: Deliver the short desktop checklist and evidence report (depends on F2; include remaining F3–F5 gaps).
+- [x] F6: Deliver the short desktop checklist and evidence report (depends on F2; include remaining F3–F5 gaps) —
+  Claude, branch `claude/craftanything-windows-setup-gehpkc`: `fork/WINDOWS-START.md`, `fork/REPORT.md`.
 
 The shared plan for reaching the product described in the README, for people and agents alike.
 `docs/STATUS.md` says what works today; this file says what comes next, who owns it and what an

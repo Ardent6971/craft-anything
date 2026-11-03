@@ -1,19 +1,27 @@
 # Route each request to the right workflow
 
-These are proposed operating recipes, not newly implemented native features. Use existing
-Craft Anything routes when they fit; otherwise let Claude work in a separate project with
-the required tools. Do not feed every input into the game-rebuild route.
+Two kinds of route, kept apart on purpose:
 
-| Request | Starting route | Additional local tooling | Required proof |
-|---|---|---|---|
-| Website from screenshots/URL | Existing website workflow; specify framework or plain HTML | Browser; Node/npm only for a chosen JS build stack | Build and open; responsive layouts; working navigation and interactions |
-| Reel/video from supplied footage | Claude-led external media project first | FFmpeg/ffprobe; optionally Remotion for coded motion graphics or Blender for 3D | Play final MP4; check picture, sound, captions, timing and export properties |
-| Minecraft Java mod | Separate mod project; Claude uses Craft Anything only for relevant inspection | Matching JDK, pinned loader/build plugin, Gradle wrapper, test client | Build distributable JAR; launch exact client; demonstrate feature; inspect logs |
-| Minecraft Paper plugin | Separate plugin project, not a client mod | Matching JDK/API and Gradle or Maven; disposable test server | Build JAR; boot isolated server; exercise commands/events; inspect logs |
-| Minecraft resource/data pack | Separate versioned pack project | Image tools if needed; matching Minecraft test instance | Valid metadata/layout and in-game behavior/appearance |
-| New small game | Existing game workflow with an explicit stack, e.g. Godot | Only that engine and export tools | Build/export; launch; play loop; reset/restart; keep self-test evidence |
-| Existing Unity/Unreal/Godot game | Work in its own repository with matching editor/version | Project's actual editor, modules and SDKs | Project tests, play check and requested target build |
-| Other desktop software | Existing app workflow; explicitly name desired stack | Runtime/build tools selected for that project | Launch and verify required behavior; inspect real errors |
+- **Built in**: Craft Anything already has the target kind, stacks and checks (website, game,
+  app). Use the app's Make screen or `craft-anything-cli rebuild`; Claude Code is the builder.
+- **External**: Claude Code works in an ordinary project folder with local tools, using
+  templates from [`fork/workflows`](../../fork/workflows). Craft Anything has **no** video or
+  Minecraft target kind; adding one is extension work (`docs/extending.md`), not done here.
+
+| Request | Route | Built in? | Starter | Local tools | Proof before calling it done |
+|---|---|---|---|---|---|
+| Website from screenshots/URL/description | Craft Anything build; say **"website"** and "plain HTML and CSS" or the framework | Yes | `new-project.cmd -Kind website` (intake only) | Edge/Chrome; Node only for framework stacks | Opens; desktop/tablet/phone widths; links and buttons work |
+| Small new game | Craft Anything build, engine named: "in Godot" / `--build-with godot`, or "in Rust" / `--build-with rust` | Yes | `-Kind game` (intake only) | Only that engine (Unity is the default if none is named) | Starts, one play loop, restart; the built-in self-test is extra evidence |
+| Desktop or console app | Craft Anything build, stack named | Yes | `-Kind app` | That stack's toolchain | Launches; the asked-for behaviour works |
+| Reel/video from your recordings | External: `fork/workflows/reel` (`render.sh`, `check.sh`) in Git Bash | No | `-Kind reel` | FFmpeg + ffprobe | `check.sh` passes (1080×1920, H.264/AAC, fps) **and** you watched it all |
+| Minecraft Paper/Spigot plugin | External: `fork/workflows/minecraft-paper` (Gradle wrapper) | No | `-Kind minecraft-paper` | JDK matching the server version | JAR builds; loads on a disposable server; command/event works in game |
+| Minecraft Fabric/NeoForge mod, resource/data pack | External, from the loader's own template for the exact version | No | none yet (not proven) | JDK, loader toolchain, test client | Builds; launches in that exact client; feature shown; logs clean |
+| Existing Unity/Unreal/Godot project | Its own repository and editor version | Partly (study in Deep mode) | — | The project's editor | Project's tests, play check, requested build |
+
+Found in the live test for this PR: a request for "a plain HTML and CSS **page**" is classified
+as an **app** (the website kind listens for "website", "web page", "landing page", " site "), so
+the build check wanted a runnable program and the builder wrote a launcher script to satisfy it.
+Say "website" or "web page". (Logged as a pending roadmap line under F4.)
 
 ## Universal intake
 
@@ -34,7 +42,7 @@ replace a requested stack. Inspect all relevant pages and states; compare at des
 tablet and phone widths. A screenshot match does not prove forms or backend features work.
 Keep preview local unless deployment is requested.
 
-Starter request: “Study these references and build an original responsive site in plain
+Starter request: “Study these references and build an original responsive website in plain
 HTML and CSS. Match the layout and visual qualities, use original branding, and verify
 the navigation and buttons at desktop, tablet and phone sizes.”
 

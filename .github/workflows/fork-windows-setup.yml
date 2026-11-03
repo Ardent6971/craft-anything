@@ -1,0 +1,168 @@
+# This fork's Windows setup scripts (fork/windows) and workflow templates (fork/workflows), run on
+# a real Windows machine: Windows PowerShell 5.1, an install root and Claude Code config folder
+# with spaces in their paths, and only disposable settings. Nothing is signed in and nothing is
+# published. The source build is manual (workflow_dispatch) because it takes a long time.
+name: Fork Windows setup
+
+on:
+  pull_request:
+    paths: ["fork/**", ".github/workflows/fork-windows-setup.yml"]
+  workflow_dispatch:
+    inputs:
+      source_build:
+        description: Also build this checkout with -Route Source
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fork-windows-setup-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scripts:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    env:
+      CA_NO_PAUSE: "1"
+      CRAFT_ANYTHING_FORK_ROOT: ${{ github.workspace }}\..\ca test root
+      CLAUDE_CONFIG_DIR: ${{ github.workspace }}\..\claude test config
+      CRAFT_ANYTHING_CONFIG_DIR: ${{ github.workspace }}\..\ca test settings
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse every script with Windows PowerShell 5.1, and keep them ASCII
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSVersionTable.PSVersion.ToString()
+          $bad = 0
+          foreach ($f in Get-ChildItem fork\windows -Filter *.ps1) {
+            $tokens = $null; $errors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$tokens, [ref]$errors)
+            foreach ($e in $errors) { Write-Host "$($f.Name):$($e.Extent.StartLineNumber): $($e.Message)"; $bad++ }
+            $bytes = [IO.File]::ReadAllBytes($f.FullName)
+            if (@($bytes | Where-Object { $_ -gt 127 }).Count -gt 0) { Write-Host "$($f.Name): not ASCII"; $bad++ }
+          }
+          if ($bad) { exit 1 }
+
+      - name: Install Claude Code (not signed in)
+        shell: powershell
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          claude --version
+          New-Item -ItemType Directory -Force -Path $env:CLAUDE_CONFIG_DIR | Out-Null
+          # An unrelated MCP entry that setup must keep.
+          Set-Content -Path (Join-Path $env:CLAUDE_CONFIG_DIR '.claude.json') -Encoding ASCII -Value '{"mcpServers":{"other-server":{"command":"other.exe","args":["x"]}}}'
+
+      - name: check.cmd before setup (Claude Code is not signed in, so exit 1 is expected)
+        shell: cmd
+        run: |
+          call fork\windows\check.cmd -Quick
+          echo exit %ERRORLEVEL%
+          exit /b 0
+
+      - name: setup.cmd -Yes (portable route)
+        shell: cmd
+        run: call fork\windows\setup.cmd -Yes
+
+      - name: The entry was added, the other one kept, and a dated backup taken
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $cfg = Get-Content (Join-Path $env:CLAUDE_CONFIG_DIR '.claude.json') -Raw | ConvertFrom-Json
+          $cmd = $cfg.mcpServers.'craft-anything'.command
+          "craft-anything -> $cmd"
+          if (-not (Test-Path -LiteralPath $cmd)) { throw 'registered CLI missing' }
+          if (-not $cfg.mcpServers.'other-server') { throw 'other-server was dropped' }
+          $baks = @(Get-ChildItem (Join-Path $env:CRAFT_ANYTHING_FORK_ROOT 'backups') -Filter 'claude.json.*.bak')
+          if ($baks.Count -lt 1) { throw 'no dated backup' }
+          Get-Content (Join-Path $env:CRAFT_ANYTHING_FORK_ROOT 'current.json')
+
+      - name: Claude Code itself connects to the server
+        shell: powershell
+        run: |
+          claude mcp list
+          if (-not ((claude mcp list) -match 'craft-anything.*Connected')) { exit 1 }
+
+      - name: A second setup run changes nothing
+        shell: cmd
+        run: |
+          call fork\windows\setup.cmd -Yes > "%RUNNER_TEMP%\second.txt" 2>&1
+          type "%RUNNER_TEMP%\second.txt"
+          findstr /C:"Already installed and verified" "%RUNNER_TEMP%\second.txt" || exit /b 1
+          findstr /C:"already connected" "%RUNNER_TEMP%\second.txt" || exit /b 1
+
+      - name: Doctor (registration and MCP handshake must pass)
+        shell: powershell
+        run: |
+          $cli = & .\fork\windows\Start-CraftAnything.ps1 -Cli
+          $out = & $cli --format text doctor --client claude_code 2>&1 | Out-String
+          $out
+          if ($out -notmatch '\[ok\] registration:claude_code') { exit 1 }
+          if ($out -notmatch '\[ok\] mcp:self-test') { exit 1 }
+          exit 0
+
+      - name: The app opens a window process and stays up
+        # A hosted runner may not draw like a desktop; report it without hiding the later steps.
+        continue-on-error: true
+        shell: powershell
+        run: |
+          & .\fork\windows\Start-CraftAnything.ps1
+          Start-Sleep -Seconds 20
+          $p = Get-Process craft-anything -ErrorAction SilentlyContinue
+          if (-not $p) {
+            Get-ChildItem "$env:CRAFT_ANYTHING_CONFIG_DIR" -Recurse -Filter *.log | ForEach-Object { Get-Content $_.FullName -Tail 40 }
+            throw 'craft-anything.exe is not running 20 s after start'
+          }
+          "running: pid $($p.Id), window '$($p.MainWindowTitle)'"
+          Stop-Process -Id $p.Id -Force
+
+      - name: Restore the original Claude Code config, then uninstall the entry
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $first = Get-ChildItem (Join-Path $env:CRAFT_ANYTHING_FORK_ROOT 'backups') -Filter 'claude.json.*.bak' | Sort-Object Name | Select-Object -First 1
+          powershell -NoProfile -ExecutionPolicy Bypass -File .\fork\windows\Restore-ClaudeConfig.ps1 -Backup $first.FullName -Yes
+          if ($LASTEXITCODE) { throw 'restore failed' }
+          # Compare with the backup itself: Claude Code rewrites .claude.json on its first run (in
+          # check.cmd), so the file setup backed up is not the one this job wrote at the start.
+          $cfgPath = Join-Path $env:CLAUDE_CONFIG_DIR '.claude.json'
+          if ((Get-FileHash $cfgPath).Hash -ne (Get-FileHash $first.FullName).Hash) { throw 'restored file differs from the backup' }
+          $cfg = Get-Content $cfgPath -Raw | ConvertFrom-Json
+          if ($cfg.mcpServers.PSObject.Properties['craft-anything']) { throw 'the pre-setup backup still has a craft-anything entry' }
+          if (-not $cfg.mcpServers.'other-server') { throw 'other-server missing after restore' }
+          'restored the pre-setup config: no craft-anything entry, other-server kept'
+          $cli = & .\fork\windows\Start-CraftAnything.ps1 -Cli
+          & $cli --format text uninstall
+
+      - name: Project folders, the Paper plugin template on Windows, and the reel scripts in Git Bash
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $projects = Join-Path $env:RUNNER_TEMP 'Craft Projects'
+          foreach ($k in 'website', 'reel', 'minecraft-paper') {
+            & .\fork\windows\New-CraftProject.ps1 -Kind $k -Name "test $k" -ProjectsDir $projects
+            if ($LASTEXITCODE) { exit 1 }
+          }
+          Push-Location (Join-Path $projects 'test minecraft-paper')
+          $env:JAVA_HOME = $env:JAVA_HOME_21_X64
+          .\gradlew.bat build --no-daemon -q
+          if ($LASTEXITCODE) { exit 1 }
+          Get-ChildItem build\libs
+          Pop-Location
+          choco install ffmpeg -y --no-progress | Out-Null
+          $env:PATH = "C:\ProgramData\chocolatey\bin;$env:PATH"
+          $bash = 'C:\Program Files\Git\bin\bash.exe'
+          Push-Location (Join-Path $projects 'test reel')
+          $env:CHERE_INVOKING = '1'
+          & $bash -lc './make-sample.sh && CAPTIONS=sample/captions.srt ./render.sh output/reel.mp4 sample/clip-landscape.mp4 sample/clip-square-silent.mp4'
+          if ($LASTEXITCODE) { exit 1 }
+          Pop-Location
+
+      - name: Source route (manual runs only)
+        if: github.event_name == 'workflow_dispatch' && inputs.source_build
+        shell: cmd
+        run: call fork\windows\setup.cmd -Route Source -SkipClaude

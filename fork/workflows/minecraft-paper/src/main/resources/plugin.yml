@@ -1,0 +1,14 @@
+name: HelloPlugin
+version: '${version}'
+main: example.hello.HelloPlugin
+api-version: '${apiVersion}'
+description: A tiny starter plugin with one command.
+commands:
+  hello:
+    description: Greets the player who runs it.
+    usage: /hello
+    permission: helloplugin.hello
+permissions:
+  helloplugin.hello:
+    description: Allows /hello
+    default: true

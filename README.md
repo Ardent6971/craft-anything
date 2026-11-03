@@ -1,6 +1,7 @@
-> **This fork:** [Windows quick start](docs/fork/WINDOWS-START.md) ·
-> [Claude setup task](docs/fork/CLAUDE-SETUP.md) · [Capabilities and gaps](docs/fork/AUDIT.md).
-> Setup guidance is prepared; installation and runtime checks are still pending.
+> **This fork:** [Windows quick start](docs/fork/WINDOWS-START.md) (scripts in `fork/windows`) ·
+> [Workflows](docs/fork/WORKFLOWS.md) · [Verification report](docs/fork/REPORT.md) ·
+> [Capabilities and gaps](docs/fork/AUDIT.md). Verified on Linux with the fork build and Claude
+> Code, and the setup scripts pass on a Windows CI runner; not yet run on the owner's desktop.
 
 <p align="center">
   <a href="https://getartcraft.com/">
