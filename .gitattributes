@@ -5,3 +5,7 @@
 *.ico binary
 *.icns binary
 *.ttf binary
+# Windows batch files need CRLF line endings.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.jar binary
